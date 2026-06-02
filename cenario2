@@ -1,0 +1,1000 @@
+.text
+main:
+        # ==================================================
+        # 1. INICIALIZAÇÃO DE REGISTRADORES BASE (Cores DK)
+        # ==================================================
+        li $s0, 0x008b4513       # Marrom (Pelagem)
+        li $s1, 0x00ffcc99       # Pele (Rosto/Pés)
+        li $s2, 0x00ff0000       # Vermelho (Gravata)
+        li $s3, 0x00000000       # Preto (Olhos/Boca)
+
+        # ==================================================
+        # 2. DESENHO DO CENÁRIO (Background, Prédios e Céu)
+        # ==================================================
+        jal draw_background
+        jal draw_platforms
+        jal draw_ladders
+
+        # ==================================================
+        # 3. LOOP PRINCIPAL DO JOGO (Animação + Física)
+        # ==================================================
+main_loop:
+        # Posição do Donkey Kong (Centro do 5o Andar: X=50, Y=8)
+        # Endereço: Base + (8 * 512) + (50 * 4) = 4096 + 200 = 4296
+        lui $a3, 0x1001
+        addi $a3, $a3, 4296
+
+        # --- Frame 1: DK olha para a esquerda (Limpa o loop anterior) ---
+        jal draw_dk_esquerda
+        
+        li $v0, 32
+        li $a0, 500              # Pausa de meio segundo
+        syscall
+
+        # --- Frame 2: DK estica o braço e gera o barril na mão ---
+        jal draw_dk_pegar_esq
+        
+        li $v0, 32
+        li $a0, 500
+        syscall
+
+        # --- Frame 3: DK vira para a direita e SOLTA o barril ---
+        jal draw_dk_jogar_dir
+
+        # ==================================================
+        # 4. MOTOR DE FÍSICA DO BARRIL (Z-Path da Fase 2)
+        # ==================================================
+        
+        # --- ANIMAÇÃO DE QUEDA DA MÃO PARA O 5o ANDAR ---
+        li $s6, 62               # X Inicial (Mão direita do DK)
+        li $s7, 2                # Y Inicial (Acima da cabeça)
+loop_drop:
+        move $a1, $s6
+        move $a2, $s7
+        jal draw_barril_xy
+        
+        li $v0, 32
+        li $a0, 20               # Queda rápida da mão
+        syscall
+        
+        move $a1, $s6
+        move $a2, $s7
+        jal erase_barril_xy
+        
+        addi $s7, $s7, 1
+        blt $s7, 5, loop_drop    # Cai até o piso do 5o andar (Y=5)
+
+        # --- 5o ANDAR: ROLAR PARA A DIREITA ---
+loop_rola_dir_5:
+        move $a1, $s6
+        move $a2, $s7
+        jal draw_barril_xy
+        
+        li $v0, 32
+        li $a0, 25
+        syscall
+        
+        move $a1, $s6
+        move $a2, $s7
+        jal erase_barril_xy
+        
+        addi $s6, $s6, 1
+        ble $s6, 81, loop_rola_dir_5  # Rola até o buraco da direita (X=82)
+
+        # --- CAIR PARA O 4o ANDAR ---
+loop_cai_dir_4:
+        move $a1, $s6            # X travado em 82
+        move $a2, $s7
+        jal draw_barril_xy
+        
+        li $v0, 32
+        li $a0, 15
+        syscall
+        
+        move $a1, $s6
+        move $a2, $s7
+        jal erase_barril_xy
+        
+        addi $s7, $s7, 1
+        blt $s7, 18, loop_cai_dir_4   # Cai até o piso do 4o andar (Y=18)
+
+        # --- 4o ANDAR: ROLAR PARA A ESQUERDA ---
+loop_rola_esq_4:
+        move $a1, $s6
+        move $a2, $s7
+        jal draw_barril_xy
+        
+        li $v0, 32
+        li $a0, 25
+        syscall
+        
+        move $a1, $s6
+        move $a2, $s7
+        jal erase_barril_xy
+        
+        addi $s6, $s6, -1
+        bge $s6, 20, loop_rola_esq_4  # Rola até o buraco da esquerda (X=19)
+
+        # --- CAIR PARA O 3o ANDAR ---
+loop_cai_esq_3:
+        move $a1, $s6            # X travado em 19
+        move $a2, $s7
+        jal draw_barril_xy
+        
+        li $v0, 32
+        li $a0, 15
+        syscall
+        
+        move $a1, $s6
+        move $a2, $s7
+        jal erase_barril_xy
+        
+        addi $s7, $s7, 1
+        blt $s7, 31, loop_cai_esq_3   # Cai até o piso do 3o andar (Y=31)
+
+        # --- 3o ANDAR: ROLAR PARA A DIREITA ---
+loop_rola_dir_3:
+        move $a1, $s6
+        move $a2, $s7
+        jal draw_barril_xy
+        
+        li $v0, 32
+        li $a0, 25
+        syscall
+        
+        move $a1, $s6
+        move $a2, $s7
+        jal erase_barril_xy
+        
+        addi $s6, $s6, 1
+        ble $s6, 81, loop_rola_dir_3  # Rola até o buraco da direita (X=82)
+
+        # --- CAIR PARA O 2o ANDAR ---
+loop_cai_dir_2:
+        move $a1, $s6            # X travado em 82
+        move $a2, $s7
+        jal draw_barril_xy
+        
+        li $v0, 32
+        li $a0, 15
+        syscall
+        
+        move $a1, $s6
+        move $a2, $s7
+        jal erase_barril_xy
+        
+        addi $s7, $s7, 1
+        blt $s7, 43, loop_cai_dir_2   # Cai até o piso do 2o andar (Y=43)
+
+        # --- 2o ANDAR: ROLAR PARA A ESQUERDA ---
+loop_rola_esq_2:
+        move $a1, $s6
+        move $a2, $s7
+        jal draw_barril_xy
+        
+        li $v0, 32
+        li $a0, 25
+        syscall
+        
+        move $a1, $s6
+        move $a2, $s7
+        jal erase_barril_xy
+        
+        addi $s6, $s6, -1
+        bge $s6, 27, loop_rola_esq_2  # Rola até o buraco da esquerda (X=26)
+
+        # --- CAIR PARA O 1o ANDAR (TÉRREO) ---
+loop_cai_esq_1:
+        move $a1, $s6            # X travado em 26
+        move $a2, $s7
+        jal draw_barril_xy
+        
+        li $v0, 32
+        li $a0, 15
+        syscall
+        
+        move $a1, $s6
+        move $a2, $s7
+        jal erase_barril_xy
+        
+        addi $s7, $s7, 1
+        blt $s7, 57, loop_cai_esq_1   # Cai até o Térreo (Y=57)
+
+        # --- TÉRREO: ROLAR PARA A DIREITA ATÉ SUMIR ---
+loop_rola_dir_1:
+        move $a1, $s6
+        move $a2, $s7
+        jal draw_barril_xy
+        
+        li $v0, 32
+        li $a0, 25
+        syscall
+        
+        move $a1, $s6
+        move $a2, $s7
+        jal erase_barril_xy
+        
+        addi $s6, $s6, 1
+        ble $s6, 128, loop_rola_dir_1 # Rola até sair da tela
+
+        # Retorna para o início do jogo (Loop Infinito)
+        j main_loop
+
+
+# =====================================================================
+# ROTINAS DE DESENHO DO CENÁRIO (FASE 2)
+# =====================================================================
+draw_background:
+        # Reserva o endereço de retorno
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+
+        # Faixa 1 (Céu)
+        li $a0, 0
+        li $a1, 0
+        li $a2, 128
+        li $a3, 21
+        li $t4, 0x00050515
+        jal draw_rect
+
+        # Faixa 2
+        li $a0, 0
+        li $a1, 21
+        li $a2, 128
+        li $a3, 15
+        li $t4, 0x00101030
+        jal draw_rect
+
+        # Faixa 3
+        li $a0, 0
+        li $a1, 36
+        li $a2, 128
+        li $a3, 15
+        li $t4, 0x001f1540
+        jal draw_rect
+
+        # Faixa 4
+        li $a0, 0
+        li $a1, 51
+        li $a2, 128
+        li $a3, 13
+        li $t4, 0x003d1b3d
+        jal draw_rect
+
+        # Massa escura (Cidade Fundo)
+        li $a0, 0
+        li $a1, 56
+        li $a2, 42
+        li $a3, 8
+        li $t4, 0x000a0a0a
+        jal draw_rect
+        li $a0, 87
+        li $a1, 56
+        li $a2, 41
+        li $a3, 8
+        jal draw_rect
+
+        # Luzinhas da cidade
+        li $t4, 0x00ffaa00
+        li $a0, 10
+        li $a1, 58
+        jal draw_pixel
+        li $a0, 35
+        li $a1, 62
+        jal draw_pixel
+        li $a0, 100
+        li $a1, 57
+        jal draw_pixel
+        li $t4, 0x00aaddff
+        li $a0, 20
+        li $a1, 60
+        jal draw_pixel
+        li $a0, 115
+        li $a1, 61
+        jal draw_pixel
+
+        # --- EMPIRE STATE BUILDING ---
+        li $a0, 45
+        li $a1, 45
+        li $a2, 39
+        li $a3, 19
+        li $t4, 0x002b2b36
+        jal draw_rect
+
+        li $t4, 0x00424250
+        li $a0, 50
+        li $a1, 45
+        li $a2, 1
+        li $a3, 19
+        jal draw_rect
+        li $a0, 55
+        li $a1, 45
+        li $a2, 1
+        li $a3, 19
+        jal draw_rect
+        li $a0, 73
+        li $a1, 45
+        li $a2, 1
+        li $a3, 19
+        jal draw_rect
+        li $a0, 78
+        li $a1, 45
+        li $a2, 1
+        li $a3, 19
+        jal draw_rect
+
+        li $a0, 52
+        li $a1, 28
+        li $a2, 25
+        li $a3, 17
+        li $t4, 0x00424250
+        jal draw_rect
+
+        li $t4, 0x00ffeebb
+        li $a0, 53
+        li $a1, 28
+        li $a2, 2
+        li $a3, 12
+        jal draw_rect
+        li $a0, 74
+        li $a1, 28
+        li $a2, 2
+        li $a3, 12
+        jal draw_rect
+
+        li $a0, 58
+        li $a1, 12
+        li $a2, 13
+        li $a3, 16
+        li $t4, 0x005c5c6b
+        jal draw_rect
+
+        li $t4, 0x00ffeebb
+        li $a0, 63
+        li $a1, 15
+        li $a2, 1
+        li $a3, 13
+        jal draw_rect
+        li $a0, 65
+        li $a1, 15
+        li $a2, 1
+        li $a3, 13
+        jal draw_rect
+        li $t4, 0x00ffffff
+        li $a0, 64
+        li $a1, 15
+        li $a2, 1
+        li $a3, 13
+        jal draw_rect
+
+        li $a0, 62
+        li $a1, 4
+        li $a2, 5
+        li $a3, 8
+        li $t4, 0x005c5c6b
+        jal draw_rect
+
+        li $a0, 64
+        li $a1, 0
+        li $a2, 1
+        li $a3, 4
+        li $t4, 0x00ffffff
+        jal draw_rect
+        li $a0, 64
+        li $a1, 0
+        li $a2, 1
+        li $a3, 2
+        li $t4, 0x00ff0000
+        jal draw_rect
+
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $31
+
+draw_platforms:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+        
+        li $t4, 0x00ff1133       # Cor Vermelha
+
+        # 1o Andar
+        li $a0, 0
+        li $a1, 62
+        li $a2, 128
+        li $a3, 2
+        jal draw_rect
+
+        # 2o Andar
+        li $a0, 0
+        li $a1, 48
+        li $a2, 26
+        li $a3, 2
+        jal draw_rect
+        li $a0, 35
+        li $a1, 48
+        li $a2, 93
+        li $a3, 2
+        jal draw_rect
+
+        # 3o Andar
+        li $a0, 0
+        li $a1, 36
+        li $a2, 81
+        li $a3, 2
+        jal draw_rect
+        li $a0, 90
+        li $a1, 36
+        li $a2, 38
+        li $a3, 2
+        jal draw_rect
+
+        # 4o Andar
+        li $a0, 20
+        li $a1, 23
+        li $a2, 108
+        li $a3, 2
+        jal draw_rect
+
+        # 5o Andar
+        li $a0, 0
+        li $a1, 10
+        li $a2, 31
+        li $a3, 2
+        jal draw_rect
+        li $a0, 40
+        li $a1, 10
+        li $a2, 41
+        li $a3, 2
+        jal draw_rect
+        li $a0, 85
+        li $a1, 10
+        li $a2, 43
+        li $a3, 2
+        jal draw_rect
+
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $31
+
+draw_ladders:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+
+        li $a0, 115
+        li $a1, 48
+        li $a2, 14
+        jal draw_escada
+        li $a0, 15
+        li $a1, 36
+        li $a2, 12
+        jal draw_escada
+        li $a0, 110
+        li $a1, 23
+        li $a2, 13
+        jal draw_escada
+        li $a0, 25
+        li $a1, 10
+        li $a2, 13
+        jal draw_escada
+        li $a0, 95
+        li $a1, 10
+        li $a2, 13
+        jal draw_escada
+
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $31
+
+# =====================================================================
+# SUB-ROTINAS BASE (Retângulos, Pixels e Escadas)
+# =====================================================================
+draw_rect:
+        move $t5, $a1
+        move $t8, $a3
+rect_y_loop:
+        move $t6, $a0
+        move $t7, $a2
+rect_x_loop:
+        lui $t9, 0x1001
+        sll $t0, $t5, 9
+        add $t9, $t9, $t0
+        sll $t0, $t6, 2
+        add $t9, $t9, $t0
+        sw $t4, 0($t9)
+        addi $t6, $t6, 1
+        addi $t7, $t7, -1
+        bgtz $t7, rect_x_loop
+        addi $t5, $t5, 1
+        addi $t8, $t8, -1
+        bgtz $t8, rect_y_loop
+        jr $31
+
+draw_pixel:
+        lui $t9, 0x1001
+        sll $t0, $a1, 9
+        add $t9, $t9, $t0
+        sll $t0, $a0, 2
+        add $t9, $t9, $t0
+        sw $t4, 0($t9)
+        jr $31
+
+draw_escada:
+        li $t4, 0x00aaaaaa
+        move $t5, $a1
+        move $t6, $a2
+        li $t7, 0
+escada_loop:
+        lui $t9, 0x1001
+        sll $t0, $t5, 9
+        add $t9, $t9, $t0
+        sll $t0, $a0, 2
+        add $t9, $t9, $t0
+        sw $t4, 0($t9)
+        sw $t4, 8($t9)
+        andi $t0, $t7, 1
+        bnez $t0, skip_degrau
+        sw $t4, 4($t9)
+skip_degrau:
+        addi $t5, $t5, 1
+        addi $t7, $t7, 1
+        addi $t6, $t6, -1
+        bgtz $t6, escada_loop
+        jr $31
+
+# =====================================================================
+# SUB-ROTINAS DO BARRIL (Física)
+# =====================================================================
+draw_barril_xy:
+        lui $t9, 0x1001
+        sll $t8, $a2, 9
+        add $t9, $t9, $t8
+        sll $t8, $a1, 2
+        add $t9, $t9, $t8
+        
+        li $t0, 0x000000aa
+        li $t1, 0x00ff8c00
+        li $t2, 0x008b4513
+
+        sw $t0, 4($t9)
+        sw $t0, 8($t9)
+        sw $t0, 12($t9)
+        sw $t0, 16($t9)
+        sw $t0, 20($t9)
+        
+        sw $t1, 512($t9)
+        sw $t2, 516($t9)
+        sw $t2, 520($t9)
+        sw $t2, 524($t9)
+        sw $t2, 528($t9)
+        sw $t2, 532($t9)
+        sw $t1, 536($t9)
+        
+        sw $t1, 1024($t9)
+        sw $t2, 1028($t9)
+        sw $t2, 1032($t9)
+        sw $t2, 1036($t9)
+        sw $t2, 1040($t9)
+        sw $t2, 1044($t9)
+        sw $t1, 1048($t9)
+        
+        sw $t1, 1536($t9)
+        sw $t2, 1540($t9)
+        sw $t2, 1544($t9)
+        sw $t2, 1548($t9)
+        sw $t2, 1552($t9)
+        sw $t2, 1556($t9)
+        sw $t1, 1560($t9)
+        
+        sw $t0, 2052($t9)
+        sw $t0, 2056($t9)
+        sw $t0, 2060($t9)
+        sw $t0, 2064($t9)
+        sw $t0, 2068($t9)
+        jr $31
+
+erase_barril_xy:
+        lui $t9, 0x1001
+        sll $t8, $a2, 9
+        add $t9, $t9, $t8
+        sll $t8, $a1, 2
+        add $t9, $t9, $t8
+
+        li $t0, 0x000a0a0a       # Cor da borracha (Cinza super escuro para não bugar o céu)
+
+        sw $t0, 4($t9)
+        sw $t0, 8($t9)
+        sw $t0, 12($t9)
+        sw $t0, 16($t9)
+        sw $t0, 20($t9)
+        
+        sw $t0, 512($t9)
+        sw $t0, 516($t9)
+        sw $t0, 520($t9)
+        sw $t0, 524($t9)
+        sw $t0, 528($t9)
+        sw $t0, 532($t9)
+        sw $t0, 536($t9)
+        
+        sw $t0, 1024($t9)
+        sw $t0, 1028($t9)
+        sw $t0, 1032($t9)
+        sw $t0, 1036($t9)
+        sw $t0, 1040($t9)
+        sw $t0, 1044($t9)
+        sw $t0, 1048($t9)
+        
+        sw $t0, 1536($t9)
+        sw $t0, 1540($t9)
+        sw $t0, 1544($t9)
+        sw $t0, 1548($t9)
+        sw $t0, 1552($t9)
+        sw $t0, 1556($t9)
+        sw $t0, 1560($t9)
+        
+        sw $t0, 2052($t9)
+        sw $t0, 2056($t9)
+        sw $t0, 2060($t9)
+        sw $t0, 2064($t9)
+        sw $t0, 2068($t9)
+        jr $31
+
+# =====================================================================
+# SUB-ROTINAS DO DONKEY KONG (Animado)
+# =====================================================================
+draw_dk_esquerda:
+        # Borracha do braço direito esticado
+        sw $zero, 3116($a3)
+        sw $zero, 3120($a3)
+        sw $zero, 3124($a3)
+        sw $zero, 3128($a3)
+        sw $zero, 3132($a3)
+        sw $zero, 3628($a3)
+        sw $zero, 3632($a3)
+        sw $zero, 3636($a3)
+        sw $zero, 3640($a3)
+        sw $zero, 3644($a3)
+
+        sw $s0, 12($a3)
+        sw $s0, 16($a3)
+        sw $s0, 20($a3)
+        sw $s0, 24($a3)
+        sw $s0, 28($a3)
+        
+        sw $s0, 520($a3)
+        sw $s0, 524($a3)
+        sw $s0, 528($a3)
+        sw $s0, 532($a3)
+        sw $s0, 536($a3)
+        sw $s0, 540($a3)
+        sw $s0, 544($a3)
+        
+        sw $s1, 1032($a3)
+        sw $s1, 1036($a3)
+        sw $s1, 1040($a3)
+        sw $s1, 1044($a3)
+        sw $s0, 1048($a3)
+        sw $s0, 1052($a3)
+        sw $s0, 1056($a3)
+        sw $s0, 1060($a3)
+        
+        sw $s1, 1536($a3)
+        sw $s3, 1540($a3)
+        sw $s1, 1544($a3)
+        sw $s3, 1548($a3)
+        sw $s1, 1552($a3)
+        sw $s0, 1556($a3)
+        sw $s0, 1560($a3)
+        sw $s0, 1564($a3)
+        
+        sw $s1, 2052($a3)
+        sw $s1, 2056($a3)
+        sw $s1, 2060($a3)
+        sw $s1, 2064($a3)
+        sw $s1, 2068($a3)
+        sw $s1, 2072($a3)
+        sw $s1, 2076($a3)
+        sw $s0, 2080($a3)
+        sw $s0, 2084($a3)
+        
+        sw $s1, 2564($a3)
+        sw $s1, 2568($a3)
+        sw $s3, 2572($a3)
+        sw $s3, 2576($a3)
+        sw $s3, 2580($a3)
+        sw $s3, 2584($a3)
+        sw $s1, 2588($a3)
+        sw $s0, 2592($a3)
+        sw $s0, 2596($a3)
+        
+        sw $s0, 3072($a3)
+        sw $s0, 3076($a3)
+        sw $s0, 3080($a3)
+        sw $s0, 3084($a3)
+        sw $s0, 3088($a3)
+        sw $s0, 3092($a3)
+        sw $s0, 3096($a3)
+        sw $s0, 3100($a3)
+        sw $s0, 3104($a3)
+        sw $s0, 3108($a3)
+        sw $s0, 3112($a3)
+        
+        sw $s0, 3584($a3)
+        sw $s0, 3588($a3)
+        sw $s0, 3592($a3)
+        sw $s1, 3596($a3)
+        sw $s1, 3600($a3)
+        sw $s2, 3604($a3)
+        sw $s1, 3608($a3)
+        sw $s1, 3612($a3)
+        sw $s0, 3616($a3)
+        sw $s0, 3620($a3)
+        sw $s0, 3624($a3)
+        
+        sw $s0, 4096($a3)
+        sw $s0, 4100($a3)
+        sw $s0, 4104($a3)
+        sw $s1, 4108($a3)
+        sw $s1, 4112($a3)
+        sw $s2, 4116($a3)
+        sw $s1, 4120($a3)
+        sw $s1, 4124($a3)
+        sw $s0, 4128($a3)
+        sw $s0, 4132($a3)
+        sw $s0, 4136($a3)
+        
+        sw $s0, 4608($a3)
+        sw $s0, 4612($a3)
+        sw $s0, 4616($a3)
+        sw $s0, 4620($a3)
+        sw $s0, 4624($a3)
+        sw $s2, 4628($a3)
+        sw $s0, 4632($a3)
+        sw $s0, 4636($a3)
+        sw $s0, 4640($a3)
+        sw $s0, 4644($a3)
+        sw $s0, 4648($a3)
+        
+        sw $s1, 5120($a3)
+        sw $s1, 5124($a3)
+        sw $s1, 5128($a3)
+        sw $s0, 5132($a3)
+        sw $s0, 5136($a3)
+        sw $s0, 5140($a3)
+        sw $s0, 5144($a3)
+        sw $s0, 5148($a3)
+        sw $s1, 5152($a3)
+        sw $s1, 5156($a3)
+        sw $s1, 5160($a3)
+        
+        sw $s1, 5632($a3)
+        sw $s1, 5636($a3)
+        sw $s1, 5640($a3)
+        sw $s0, 5644($a3)
+        sw $s0, 5648($a3)
+        sw $s3, 5652($a3)
+        sw $s0, 5656($a3)
+        sw $s0, 5660($a3)
+        sw $s1, 5664($a3)
+        sw $s1, 5668($a3)
+        sw $s1, 5672($a3)
+        
+        sw $s0, 6156($a3)
+        sw $s0, 6160($a3)
+        sw $s3, 6164($a3)
+        sw $s0, 6168($a3)
+        sw $s0, 6172($a3)
+        
+        sw $s1, 6664($a3)
+        sw $s1, 6668($a3)
+        sw $s1, 6672($a3)
+        sw $s3, 6676($a3)
+        sw $s1, 6680($a3)
+        sw $s1, 6684($a3)
+        sw $s1, 6688($a3)
+        
+        sw $s1, 7176($a3)
+        sw $s1, 7180($a3)
+        sw $s1, 7184($a3)
+        sw $s3, 7188($a3)
+        sw $s1, 7192($a3)
+        sw $s1, 7196($a3)
+        sw $s1, 7200($a3)
+        jr $31
+
+draw_dk_pegar_esq:
+        sw $zero, 4096($a3)
+        sw $zero, 4100($a3)
+        sw $zero, 4104($a3)
+        sw $zero, 4608($a3)
+        sw $zero, 4612($a3)
+        sw $zero, 4616($a3)
+        sw $zero, 5120($a3)
+        sw $zero, 5124($a3)
+        sw $zero, 5128($a3)
+        sw $zero, 5632($a3)
+        sw $zero, 5636($a3)
+        sw $zero, 5640($a3)
+
+        li $t0, 0x000000aa
+        li $t1, 0x00ff8c00
+        li $t2, 0x008b4513
+        
+        sw $t0, 2000($a3)
+        sw $t0, 2004($a3)
+        sw $t0, 2008($a3)
+        sw $t0, 2012($a3)
+        sw $t0, 2016($a3)
+        sw $t0, 2020($a3)
+        sw $t0, 2024($a3)
+        
+        sw $t1, 2512($a3)
+        sw $t2, 2516($a3)
+        sw $t2, 2520($a3)
+        sw $t2, 2524($a3)
+        sw $t2, 2528($a3)
+        sw $t2, 2532($a3)
+        sw $t1, 2536($a3)
+        
+        sw $t1, 3024($a3)
+        sw $t2, 3028($a3)
+        sw $t2, 3032($a3)
+        sw $t2, 3036($a3)
+        sw $t2, 3040($a3)
+        sw $t2, 3044($a3)
+        sw $t1, 3048($a3)
+        sw $s1, 3052($a3)
+        sw $s1, 3056($a3)
+        sw $s0, 3060($a3)
+        sw $s0, 3064($a3)
+        sw $s0, 3068($a3)
+        
+        sw $t1, 3536($a3)
+        sw $t2, 3540($a3)
+        sw $t2, 3544($a3)
+        sw $t2, 3548($a3)
+        sw $t2, 3552($a3)
+        sw $t2, 3556($a3)
+        sw $t1, 3560($a3)
+        sw $s1, 3564($a3)
+        sw $s1, 3568($a3)
+        sw $s0, 3572($a3)
+        sw $s0, 3576($a3)
+        sw $s0, 3580($a3)
+        
+        sw $t0, 4048($a3)
+        sw $t0, 4052($a3)
+        sw $t0, 4056($a3)
+        sw $t0, 4060($a3)
+        sw $t0, 4064($a3)
+        sw $t0, 4068($a3)
+        sw $t0, 4072($a3)
+        jr $31
+
+draw_dk_jogar_dir:
+        sw $zero, 2000($a3)
+        sw $zero, 2004($a3)
+        sw $zero, 2008($a3)
+        sw $zero, 2012($a3)
+        sw $zero, 2016($a3)
+        sw $zero, 2020($a3)
+        sw $zero, 2024($a3)
+        
+        sw $zero, 2512($a3)
+        sw $zero, 2516($a3)
+        sw $zero, 2520($a3)
+        sw $zero, 2524($a3)
+        sw $zero, 2528($a3)
+        sw $zero, 2532($a3)
+        sw $zero, 2536($a3)
+        
+        sw $zero, 3024($a3)
+        sw $zero, 3028($a3)
+        sw $zero, 3032($a3)
+        sw $zero, 3036($a3)
+        sw $zero, 3040($a3)
+        sw $zero, 3044($a3)
+        sw $zero, 3048($a3)
+        sw $zero, 3052($a3)
+        sw $zero, 3056($a3)
+        sw $zero, 3060($a3)
+        sw $zero, 3064($a3)
+        sw $zero, 3068($a3)
+        
+        sw $zero, 3536($a3)
+        sw $zero, 3540($a3)
+        sw $zero, 3544($a3)
+        sw $zero, 3548($a3)
+        sw $zero, 3552($a3)
+        sw $zero, 3556($a3)
+        sw $zero, 3560($a3)
+        sw $zero, 3564($a3)
+        sw $zero, 3568($a3)
+        sw $zero, 3572($a3)
+        sw $zero, 3576($a3)
+        sw $zero, 3580($a3)
+        
+        sw $zero, 4048($a3)
+        sw $zero, 4052($a3)
+        sw $zero, 4056($a3)
+        sw $zero, 4060($a3)
+        sw $zero, 4064($a3)
+        sw $zero, 4068($a3)
+        sw $zero, 4072($a3)
+
+        sw $zero, 4128($a3)
+        sw $zero, 4132($a3)
+        sw $zero, 4136($a3)
+        sw $zero, 4640($a3)
+        sw $zero, 4644($a3)
+        sw $zero, 4648($a3)
+        sw $zero, 5152($a3)
+        sw $zero, 5156($a3)
+        sw $zero, 5160($a3)
+        sw $zero, 5664($a3)
+        sw $zero, 5668($a3)
+        sw $zero, 5672($a3)
+
+        sw $s0, 1028($a3)
+        sw $s0, 1032($a3)
+        sw $s0, 1036($a3)
+        sw $s0, 1040($a3)
+        sw $s1, 1044($a3)
+        sw $s1, 1048($a3)
+        sw $s1, 1052($a3)
+        sw $s1, 1056($a3)
+        
+        sw $s0, 1540($a3)
+        sw $s0, 1544($a3)
+        sw $s0, 1548($a3)
+        sw $s1, 1552($a3)
+        sw $s3, 1556($a3)
+        sw $s1, 1560($a3)
+        sw $s3, 1564($a3)
+        sw $s1, 1568($a3)
+        
+        sw $s0, 2052($a3)
+        sw $s0, 2056($a3)
+        sw $s1, 2060($a3)
+        sw $s1, 2064($a3)
+        sw $s1, 2068($a3)
+        sw $s1, 2072($a3)
+        sw $s1, 2076($a3)
+        sw $s1, 2080($a3)
+        sw $s1, 2084($a3)
+        
+        sw $s0, 2564($a3)
+        sw $s0, 2568($a3)
+        sw $s1, 2572($a3)
+        sw $s3, 2576($a3)
+        sw $s3, 2580($a3)
+        sw $s3, 2584($a3)
+        sw $s3, 2588($a3)
+        sw $s1, 2592($a3)
+        sw $s1, 2596($a3)
+
+        sw $s0, 4096($a3)
+        sw $s0, 4100($a3)
+        sw $s0, 4104($a3)
+        sw $s0, 4608($a3)
+        sw $s0, 4612($a3)
+        sw $s0, 4616($a3)
+        sw $s1, 5120($a3)
+        sw $s1, 5124($a3)
+        sw $s1, 5128($a3)
+        sw $s1, 5632($a3)
+        sw $s1, 5636($a3)
+        sw $s1, 5640($a3)
+
+        sw $s0, 3116($a3)
+        sw $s0, 3120($a3)
+        sw $s0, 3124($a3)
+        sw $s1, 3128($a3)
+        sw $s1, 3132($a3)
+        
+        sw $s0, 3628($a3)
+        sw $s0, 3632($a3)
+        sw $s0, 3636($a3)
+        sw $s1, 3640($a3)
+        sw $s1, 3644($a3)
+        
+        jr $31
