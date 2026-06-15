@@ -1,0 +1,1452 @@
+.data
+        # ==================================================
+        # PROTEÇÃO DE MEMÓRIA E BUFFERS (SEM CORES AQUI)
+        # ==================================================
+        tela_reservada:     .space 32768 
+        buffer_bg_barril:   .space 36
+        buffer_bg_dk:       .space 1200
+        buffer_bg_princesa: .space 280
+        princesa_x:         .word 71
+        princesa_dir:       .word 1
+        princesa_tick:      .word 0
+        princesa_pose:      .word 0
+        cor_p_rosa:         .word 0x00ff66cc
+        cor_p_loiro:        .word 0x00ffff00
+        cor_p_pele:         .word 0x00ffcc99
+        cor_p_preto:        .word 0x00000000
+        cor_p_vermelho:     .word 0x00ff0000
+
+        .text
+        .globl main
+main:
+        lui $s5, 0x1001
+        addi $s5, $s5, 4152
+
+        # ==================================================
+        # 1. CÉU NOTURNO (Degradê)
+        # ==================================================
+        li $a0, 0
+        li $a1, 0
+        li $a2, 128
+        li $a3, 21
+        li $t4, 0x0008081a
+        jal draw_rect
+
+        li $a0, 0
+        li $a1, 21
+        li $a2, 128
+        li $a3, 20
+        li $t4, 0x000d0d2b
+        jal draw_rect
+
+        li $a0, 0
+        li $a1, 41
+        li $a2, 128
+        li $a3, 23 
+        li $t4, 0x0012123d
+        jal draw_rect
+
+        # ==================================================
+        # 2. ESTRELAS E LUA CHEIA
+        # ==================================================
+        li $t4, 0x00ffffff
+        li $a0, 5
+        li $a1, 5
+        jal draw_pixel
+        
+        li $a0, 18
+        li $a1, 12
+        jal draw_pixel
+        
+        li $a0, 30
+        li $a1, 4
+        jal draw_pixel
+        
+        li $a0, 45
+        li $a1, 15
+        jal draw_pixel
+        
+        li $a0, 80
+        li $a1, 6
+        jal draw_pixel
+        
+        li $a0, 95
+        li $a1, 18
+        jal draw_pixel
+        
+        li $a0, 115
+        li $a1, 8
+        jal draw_pixel
+
+        li $t4, 0x00fcfcda
+        li $a0, 99
+        li $a1, 4
+        li $a2, 5
+        li $a3, 1
+        jal draw_rect
+        
+        li $a0, 98
+        li $a1, 5
+        li $a2, 7
+        li $a3, 4
+        jal draw_rect
+        
+        li $a0, 99
+        li $a1, 9
+        li $a2, 5
+        li $a3, 1
+        jal draw_rect
+
+        # ==================================================
+        # 3. PRÉDIOS - CAMADA 1 (Fundo Silhuetas)
+        # ==================================================
+        li $t4, 0x001a1a2e
+        li $a0, 10
+        li $a1, 20
+        li $a2, 20
+        li $a3, 44
+        jal draw_rect
+        
+        li $a0, 50
+        li $a1, 15
+        li $a2, 25
+        li $a3, 49
+        jal draw_rect
+        
+        li $a0, 90
+        li $a1, 25
+        li $a2, 30
+        li $a3, 39
+        jal draw_rect
+
+        # ==================================================
+        # 4. PRÉDIOS - CAMADA 2 (Frente e Detalhes)
+        # ==================================================
+        li $t4, 0x00252542
+        li $a0, 2
+        li $a1, 30
+        li $a2, 20
+        li $a3, 34
+        jal draw_rect
+        
+        li $t4, 0x00ff3366
+        li $a0, 12
+        li $a1, 22
+        li $a2, 1
+        li $a3, 8
+        jal draw_rect
+        
+        li $t4, 0x002b2d42
+        li $a0, 30
+        li $a1, 18
+        li $a2, 25
+        li $a3, 46
+        jal draw_rect
+        
+        li $a0, 35
+        li $a1, 15
+        li $a2, 15
+        li $a3, 3
+        jal draw_rect
+        
+        li $t4, 0x00ff0000
+        li $a0, 42
+        li $a1, 14
+        jal draw_pixel
+
+        li $t4, 0x001f2030
+        li $a0, 65
+        li $a1, 10
+        li $a2, 23
+        li $a3, 54
+        jal draw_rect
+        
+        li $t4, 0x00ffffff
+        li $a0, 76
+        li $a1, 2
+        li $a2, 1
+        li $a3, 8
+        jal draw_rect
+
+        li $t4, 0x00302b3a
+        li $a0, 98
+        li $a1, 35
+        li $a2, 27
+        li $a3, 29
+        jal draw_rect
+
+        # ==================================================
+        # 5. JANELAS E NEONS (Trocado para $t2 e $t3 para não bugar o DK)
+        # ==================================================
+        li $t2, 34
+loop_winA_y:
+        li $t3, 6
+loop_winA_x:
+        move $a0, $t3
+        move $a1, $t2
+        li $a2, 2
+        li $a3, 1
+        li $t4, 0x00ffcc00
+        jal draw_rect
+        addi $t3, $t3, 4
+        ble $t3, 17, loop_winA_x
+        addi $t2, $t2, 4
+        ble $t2, 63, loop_winA_y
+
+        li $t2, 14
+loop_winC_y:
+        li $t3, 72
+loop_winC_x:
+        move $a0, $t3
+        move $a1, $t2
+        li $a2, 2
+        li $a3, 3
+        li $t4, 0x00ff9900
+        jal draw_rect
+        addi $t3, $t3, 3
+        ble $t3, 81, loop_winC_x
+        addi $t2, $t2, 6
+        ble $t2, 63, loop_winC_y
+
+        li $t2, 40
+loop_winD_y:
+        li $t3, 102
+loop_winD_x:
+        move $a0, $t3
+        move $a1, $t2
+        li $a2, 3
+        li $a3, 1
+        li $t4, 0x00ffffcc
+        jal draw_rect
+        addi $t3, $t3, 6
+        ble $t3, 119, loop_winD_x
+        addi $t2, $t2, 5
+        ble $t2, 63, loop_winD_y
+
+        li $t2, 15
+loop_neonC:
+        li $a0, 67
+        move $a1, $t2
+        li $a2, 1
+        li $a3, 2
+        li $t4, 0x0000ffcc
+        jal draw_rect
+        addi $t2, $t2, 3
+        ble $t2, 34, loop_neonC
+
+        li $t2, 22               
+loop_winB_y:
+        li $t3, 34               
+loop_winB_x:
+        add $t0, $t3, $t2        
+        li $t1, 5
+        div $t0, $t1             
+        mfhi $t8                 
+        beqz $t8, skip_winB      
+        
+        move $a0, $t3
+        move $a1, $t2
+        li $t4, 0x0088ccff       
+        jal draw_pixel           
+        
+skip_winB:
+        addi $t3, $t3, 2         
+        ble $t3, 50, loop_winB_x
+        addi $t2, $t2, 3         
+        ble $t2, 63, loop_winB_y
+
+        # ==================================================
+        # 6. PLATAFORMAS VERMELHAS
+        # ==================================================
+        li $t4, 0x00ff0000
+        
+        li $a0, 0
+        li $a1, 62
+        li $a2, 128
+        li $a3, 2
+        jal draw_rect
+        
+        li $a0, 0
+        li $a1, 48
+        li $a2, 103
+        li $a3, 2
+        jal draw_rect
+        
+        li $a0, 25
+        li $a1, 36
+        li $a2, 103
+        li $a3, 2
+        jal draw_rect
+        
+        li $a0, 0
+        li $a1, 23
+        li $a2, 103
+        li $a3, 2
+        jal draw_rect
+        
+        li $a0, 25
+        li $a1, 10
+        li $a2, 103
+        li $a3, 2
+        jal draw_rect
+
+        # ==================================================
+        # 7. ESCADAS
+        # ==================================================
+        jal draw_ladders
+
+        # ==================================================
+        # 8. BARRIS ESTÁTICOS (PILHA NO 4º ANDAR)
+        # ==================================================
+        li $a0, 4
+        li $a1, 20
+        jal draw_barril_cenario
+
+        li $a0, 4
+        li $a1, 17
+        jal draw_barril_cenario
+
+        li $a0, 4
+        li $a1, 14
+        jal draw_barril_cenario
+
+        # ==================================================
+        # 8.1 PRINCESA NO 5o ANDAR
+        # ==================================================
+        jal save_princesa_area
+        jal draw_princesa
+
+        # ==================================================
+        # INICIALIZAÇÃO DE CORES DO DONKEY KONG (PÓS-CENÁRIO)
+        # ==================================================
+        li $s0, 0x008b4513
+        li $s1, 0x00ffcc99
+        li $s2, 0x00ff0000
+        li $s3, 0x00000000
+
+        jal save_dk_area
+
+        # ==================================================
+        # 9. LOOP PRINCIPAL (ANIMAÇÃO DONKEY KONG + FÍSICA BARRIL)
+        # ==================================================
+loop_dk_animacao:
+        jal clear_dk_area
+        jal save_dk_area
+        jal draw_dk_frente
+        jal redraw_pilha_barris
+        li $a0, 240
+        jal sleep_princesa
+
+        # Donkey vira para a esquerda antes de ir ate a pilha.
+        jal clear_dk_area
+        jal save_dk_area
+        jal draw_dk_andar_esq
+        jal redraw_pilha_barris
+        li $a0, 220
+        jal sleep_princesa
+
+        jal clear_dk_area
+        addi $s5, $s5, -8       # passo 1: 2 pixels para esquerda
+        jal save_dk_area
+        jal draw_dk_andar_esq
+        jal redraw_pilha_barris
+        li $a0, 230
+        jal sleep_princesa
+
+        jal clear_dk_area
+        addi $s5, $s5, -8       # passo 2: mais 2 pixels para esquerda
+        jal save_dk_area
+        jal draw_dk_pegar_esq
+        jal redraw_pilha_barris
+        li $a0, 300
+        jal sleep_princesa
+
+        # Com o barril novo na mao, vira para a direita.
+        jal clear_dk_area
+        jal save_dk_area
+        jal draw_dk_com_barril_dir
+        jal redraw_pilha_barris
+        li $a0, 260
+        jal sleep_princesa
+
+        # Volta para a posicao inicial em dois passos, carregando o barril.
+        jal clear_dk_area
+        addi $s5, $s5, 8
+        jal save_dk_area
+        jal draw_dk_com_barril_dir
+        jal redraw_pilha_barris
+        li $a0, 230
+        jal sleep_princesa
+
+        jal clear_dk_area
+        addi $s5, $s5, 8        # volta posicao original
+        jal save_dk_area
+        jal draw_dk_com_barril_dir
+        jal redraw_pilha_barris
+        li $a0, 260
+        jal sleep_princesa
+
+        # Solta o barril e olha para frente antes de repetir o ciclo.
+        jal clear_dk_area
+        jal save_dk_area
+        jal draw_dk_soltar_dir
+        jal redraw_pilha_barris
+        li $a0, 230
+        jal sleep_princesa
+
+        jal clear_dk_area
+        jal save_dk_area
+        jal draw_dk_frente
+        jal redraw_pilha_barris
+        li $a0, 220
+        jal sleep_princesa
+        
+        # INÍCIO DA ROLAGEM DO BARRIL!
+        li $s6, 20       
+        li $s7, 20          
+
+roll_right_4:
+        jal anim_barril_step
+        addi $s6, $s6, 1
+        ble $s6, 104, roll_right_4
+
+drop_4_3:
+        jal anim_barril_step
+        addi $s7, $s7, 1
+        ble $s7, 33, drop_4_3
+
+roll_left_3:
+        jal anim_barril_step
+        addi $s6, $s6, -1
+        bge $s6, 20, roll_left_3
+
+drop_3_2:
+        jal anim_barril_step
+        addi $s7, $s7, 1
+        ble $s7, 45, drop_3_2
+
+roll_right_2:
+        jal anim_barril_step
+        addi $s6, $s6, 1
+        ble $s6, 104, roll_right_2
+
+drop_2_1:
+        jal anim_barril_step
+        addi $s7, $s7, 1
+        ble $s7, 59, drop_2_1
+
+roll_left_1:
+        jal anim_barril_step
+        addi $s6, $s6, -1
+        bge $s6, 0, roll_left_1
+
+        j loop_dk_animacao
+
+        # ==================================================
+        # ENCERRAMENTO 
+        # ==================================================
+        li $v0, 10
+        syscall
+
+# =====================================================================
+# SUB-ROTINAS DE DESENHO E ANIMAÇÃO
+# =====================================================================
+anim_barril_step:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+        
+        move $a0, $s6
+        move $a1, $s7
+        li $a2, 3
+        li $a3, 3
+        la $t4, buffer_bg_barril
+        jal save_bg
+        
+        move $a0, $s6
+        move $a1, $s7
+        jal draw_barril_cenario
+        
+        li $v0, 32
+        li $a0, 15
+        syscall
+        
+        move $a0, $s6
+        move $a1, $s7
+        li $a2, 3
+        li $a3, 3
+        la $t4, buffer_bg_barril
+        jal restore_bg
+        jal anim_princesa_step
+        
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $ra
+
+draw_rect:
+        move $t5, $a1
+        move $t8, $a3
+rect_y_loop:
+        move $t6, $a0
+        move $t7, $a2
+rect_x_loop:
+        lui $t9, 0x1001
+        sll $t0, $t5, 9
+        add $t9, $t9, $t0
+        sll $t0, $t6, 2
+        add $t9, $t9, $t0
+        sw $t4, 0($t9)
+        addi $t6, $t6, 1
+        addi $t7, $t7, -1
+        bgtz $t7, rect_x_loop
+        addi $t5, $t5, 1
+        addi $t8, $t8, -1
+        bgtz $t8, rect_y_loop
+        jr $31
+
+draw_pixel:
+        lui $t9, 0x1001
+        sll $t0, $a1, 9
+        add $t9, $t9, $t0
+        sll $t0, $a0, 2
+        add $t9, $t9, $t0
+        sw $t4, 0($t9)
+        jr $31
+
+draw_barril_cenario:
+        lui $t9, 0x1001
+        sll $t0, $a1, 9
+        add $t9, $t9, $t0
+        sll $t0, $a0, 2
+        add $t9, $t9, $t0
+        
+        # Cores ajustadas estritamente para TONS DE MARROM
+        li $t0, 0x008b4513
+        li $t1, 0x00a0522d
+        li $t2, 0x00d2691e
+
+        sw $t0, 0($t9)
+        sw $t0, 4($t9)
+        sw $t0, 8($t9)
+
+        sw $t1, 512($t9)
+        sw $t2, 516($t9)
+        sw $t1, 520($t9)
+
+        sw $t0, 1024($t9)
+        sw $t0, 1028($t9)
+        sw $t0, 1032($t9)
+
+        jr $31
+
+draw_ladders:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+
+        li $a0, 90      
+        li $a1, 48
+        li $a2, 14
+        jal draw_escada
+        
+        li $a0, 35      
+        li $a1, 36
+        li $a2, 12
+        jal draw_escada
+        
+        li $a0, 90      
+        li $a1, 23
+        li $a2, 13
+        jal draw_escada
+        
+        li $a0, 35      
+        li $a1, 10
+        li $a2, 13
+        jal draw_escada
+        
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $ra
+
+draw_escada:
+        li $t4, 0x00aaaaaa
+        move $t5, $a1
+        move $t6, $a2
+        li $t7, 0
+escada_loop:
+        lui $t9, 0x1001
+        sll $t0, $t5, 9
+        add $t9, $t9, $t0
+        sll $t0, $a0, 2
+        add $t9, $t9, $t0
+        sw $t4, 0($t9)
+        sw $t4, 8($t9)
+        andi $t0, $t7, 1
+        bnez $t0, skip_degrau
+        sw $t4, 4($t9)
+skip_degrau:
+        addi $t5, $t5, 1
+        addi $t7, $t7, 1
+        addi $t6, $t6, -1
+        bgtz $t6, escada_loop
+        jr $31
+
+check_fisica_escada:
+        li $v0, 0                
+        blt $a0, 35, skip_col_esq
+        bgt $a0, 37, skip_col_esq
+        li $v0, 1
+        jr $31
+skip_col_esq:
+        blt $a0, 90, skip_col_dir
+        bgt $a0, 92, skip_col_dir
+        li $v0, 1
+        jr $31
+skip_col_dir:
+        jr $31
+
+draw_dk_esquerda:
+        # Fundo transparente restaurado por save_dk_area/clear_dk_area.
+        sw $s0, 12($s5)
+        sw $s0, 16($s5)
+        sw $s0, 20($s5)
+        sw $s0, 24($s5)
+        sw $s0, 28($s5)
+        sw $s0, 520($s5)
+        sw $s0, 524($s5)
+        sw $s0, 528($s5)
+        sw $s0, 532($s5)
+        sw $s0, 536($s5)
+        sw $s0, 540($s5)
+        sw $s0, 544($s5)
+        sw $s0, 1028($s5)
+        sw $s0, 1032($s5)
+        sw $s0, 1036($s5)
+        sw $s0, 1040($s5)
+        sw $s1, 1044($s5)
+        sw $s1, 1048($s5)
+        sw $s1, 1052($s5)
+        sw $s1, 1056($s5)
+        sw $s0, 1540($s5)
+        sw $s0, 1544($s5)
+        sw $s0, 1548($s5)
+        sw $s1, 1552($s5)
+        sw $s3, 1556($s5)
+        sw $s1, 1560($s5)
+        sw $s3, 1564($s5)
+        sw $s1, 1568($s5)
+        sw $s0, 2052($s5)
+        sw $s0, 2056($s5)
+        sw $s1, 2060($s5)
+        sw $s1, 2064($s5)
+        sw $s1, 2068($s5)
+        sw $s1, 2072($s5)
+        sw $s1, 2076($s5)
+        sw $s1, 2080($s5)
+        sw $s1, 2084($s5)
+        sw $s0, 2564($s5)
+        sw $s0, 2568($s5)
+        sw $s1, 2572($s5)
+        sw $s3, 2576($s5)
+        sw $s3, 2580($s5)
+        sw $s3, 2584($s5)
+        sw $s3, 2588($s5)
+        sw $s1, 2592($s5)
+        sw $s1, 2596($s5)
+        sw $s0, 3072($s5)
+        sw $s0, 3076($s5)
+        sw $s0, 3080($s5)
+        sw $s0, 3084($s5)
+        sw $s0, 3088($s5)
+        sw $s0, 3092($s5)
+        sw $s0, 3096($s5)
+        sw $s0, 3100($s5)
+        sw $s0, 3104($s5)
+        sw $s0, 3108($s5)
+        sw $s0, 3112($s5)
+        sw $s0, 3584($s5)
+        sw $s0, 3588($s5)
+        sw $s0, 3592($s5)
+        sw $s1, 3596($s5)
+        sw $s1, 3600($s5)
+        sw $s2, 3604($s5)
+        sw $s1, 3608($s5)
+        sw $s1, 3612($s5)
+        sw $s0, 3616($s5)
+        sw $s0, 3620($s5)
+        sw $s0, 3624($s5)
+        sw $s0, 4096($s5)
+        sw $s0, 4100($s5)
+        sw $s0, 4104($s5)
+        sw $s1, 4108($s5)
+        sw $s1, 4112($s5)
+        sw $s2, 4116($s5)
+        sw $s1, 4120($s5)
+        sw $s1, 4124($s5)
+        sw $s0, 4128($s5)
+        sw $s0, 4132($s5)
+        sw $s0, 4136($s5)
+        sw $s0, 4608($s5)
+        sw $s0, 4612($s5)
+        sw $s0, 4616($s5)
+        sw $s0, 4620($s5)
+        sw $s0, 4624($s5)
+        sw $s2, 4628($s5)
+        sw $s0, 4632($s5)
+        sw $s0, 4636($s5)
+        sw $s0, 4640($s5)
+        sw $s0, 4644($s5)
+        sw $s0, 4648($s5)
+        sw $s1, 5120($s5)
+        sw $s1, 5124($s5)
+        sw $s1, 5128($s5)
+        sw $s0, 5132($s5)
+        sw $s0, 5136($s5)
+        sw $s0, 5140($s5)
+        sw $s0, 5144($s5)
+        sw $s0, 5148($s5)
+        sw $s1, 5152($s5)
+        sw $s1, 5156($s5)
+        sw $s1, 5160($s5)
+        sw $s1, 5632($s5)
+        sw $s1, 5636($s5)
+        sw $s1, 5640($s5)
+        sw $s0, 5644($s5)
+        sw $s0, 5648($s5)
+        sw $s3, 5652($s5)
+        sw $s0, 5656($s5)
+        sw $s0, 5660($s5)
+        sw $s1, 5664($s5)
+        sw $s1, 5668($s5)
+        sw $s1, 5672($s5)
+        sw $s0, 6156($s5)
+        sw $s0, 6160($s5)
+        sw $s3, 6164($s5)
+        sw $s0, 6168($s5)
+        sw $s0, 6172($s5)
+        sw $s1, 6664($s5)
+        sw $s1, 6668($s5)
+        sw $s1, 6672($s5)
+        sw $s3, 6676($s5)
+        sw $s1, 6680($s5)
+        sw $s1, 6684($s5)
+        sw $s1, 6688($s5)
+        sw $s1, 7176($s5)
+        sw $s1, 7180($s5)
+        sw $s1, 7184($s5)
+        sw $s3, 7188($s5)
+        sw $s1, 7192($s5)
+        sw $s1, 7196($s5)
+        sw $s1, 7200($s5)
+        jr $31
+
+draw_dk_pegar_esq:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+
+        jal draw_dk_andar_esq
+        jal clear_dk_braco_esq_baixo
+
+        # Barril novo na mao esquerda; a pilha continua estatica no cenario.
+        li $t0, 0x008b4513
+        li $t1, 0x00a0522d
+        li $t2, 0x00d2691e
+        sw $t0, 2524($s5)
+        sw $t0, 2528($s5)
+        sw $t0, 2532($s5)
+        sw $t1, 3036($s5)
+        sw $t2, 3040($s5)
+        sw $t1, 3044($s5)
+        sw $t0, 3548($s5)
+        sw $t0, 3552($s5)
+        sw $t0, 3556($s5)
+
+        # Braco esticado segurando o barril.
+        sw $s1, 3052($s5)
+        sw $s1, 3056($s5)
+        sw $s0, 3060($s5)
+        sw $s0, 3064($s5)
+        sw $s0, 3068($s5)
+        sw $s1, 3564($s5)
+        sw $s1, 3568($s5)
+        sw $s0, 3572($s5)
+        sw $s0, 3576($s5)
+        sw $s0, 3580($s5)
+
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $31
+
+
+draw_dk_jogar_dir:
+        sw $zero, 2524($s5)
+        sw $zero, 2528($s5)
+        sw $zero, 2532($s5)
+        sw $zero, 3036($s5)
+        sw $zero, 3040($s5)
+        sw $zero, 3044($s5)
+        sw $zero, 3052($s5)
+        sw $zero, 3056($s5)
+        sw $zero, 3060($s5)
+        sw $zero, 3064($s5)
+        sw $zero, 3068($s5)
+        sw $zero, 3548($s5)
+        sw $zero, 3552($s5)
+        sw $zero, 3556($s5)
+        sw $zero, 3564($s5)
+        sw $zero, 3568($s5)
+        sw $zero, 3572($s5)
+        sw $zero, 3576($s5)
+        sw $zero, 3580($s5)
+        sw $zero, 4128($s5)
+        sw $zero, 4132($s5)
+        sw $zero, 4136($s5)
+        sw $zero, 4640($s5)
+        sw $zero, 4644($s5)
+        sw $zero, 4648($s5)
+        sw $zero, 5152($s5)
+        sw $zero, 5156($s5)
+        sw $zero, 5160($s5)
+        sw $zero, 5664($s5)
+        sw $zero, 5668($s5)
+        sw $zero, 5672($s5)
+        sw $s0, 1028($s5)
+        sw $s0, 1032($s5)
+        sw $s0, 1036($s5)
+        sw $s0, 1040($s5)
+        sw $s1, 1044($s5)
+        sw $s1, 1048($s5)
+        sw $s1, 1052($s5)
+        sw $s1, 1056($s5)
+        sw $s0, 1540($s5)
+        sw $s0, 1544($s5)
+        sw $s0, 1548($s5)
+        sw $s1, 1552($s5)
+        sw $s3, 1556($s5)
+        sw $s1, 1560($s5)
+        sw $s3, 1564($s5)
+        sw $s1, 1568($s5)
+        sw $s0, 2052($s5)
+        sw $s0, 2056($s5)
+        sw $s1, 2060($s5)
+        sw $s1, 2064($s5)
+        sw $s1, 2068($s5)
+        sw $s1, 2072($s5)
+        sw $s1, 2076($s5)
+        sw $s1, 2080($s5)
+        sw $s1, 2084($s5)
+        sw $s0, 2564($s5)
+        sw $s0, 2568($s5)
+        sw $s1, 2572($s5)
+        sw $s3, 2576($s5)
+        sw $s3, 2580($s5)
+        sw $s3, 2584($s5)
+        sw $s3, 2588($s5)
+        sw $s1, 2592($s5)
+        sw $s1, 2596($s5)
+        sw $s0, 4096($s5)
+        sw $s0, 4100($s5)
+        sw $s0, 4104($s5)
+        sw $s0, 4608($s5)
+        sw $s0, 4612($s5)
+        sw $s0, 4616($s5)
+        sw $s0, 4620($s5)
+        sw $s0, 4624($s5)
+        sw $s0, 4628($s5)
+        sw $s0, 4632($s5)
+        sw $s0, 4636($s5)
+        sw $s0, 4640($s5)
+        sw $s0, 4644($s5)
+        sw $s0, 4648($s5)
+        sw $s1, 5120($s5)
+        sw $s1, 5124($s5)
+        sw $s1, 5128($s5)
+        sw $s0, 5132($s5)
+        sw $s0, 5136($s5)
+        sw $s0, 5140($s5)
+        sw $s0, 5144($s5)
+        sw $s0, 5148($s5)
+        sw $s1, 5152($s5)
+        sw $s1, 5156($s5)
+        sw $s1, 5160($s5)
+        sw $s0, 5632($s5)
+        sw $s0, 5636($s5)
+        sw $s0, 5640($s5)
+        sw $s0, 5644($s5)
+        sw $s0, 5648($s5)
+        sw $s0, 5652($s5)
+        sw $s0, 5656($s5)
+        sw $s0, 5660($s5)
+        sw $s1, 5664($s5)
+        sw $s1, 5668($s5)
+        sw $s1, 5672($s5)
+        sw $s0, 6156($s5)
+        sw $s0, 6160($s5)
+        sw $s3, 6164($s5)
+        sw $s0, 6168($s5)
+        sw $s0, 6172($s5)
+        sw $s1, 6664($s5)
+        sw $s1, 6668($s5)
+        sw $s1, 6672($s5)
+        sw $s3, 6676($s5)
+        sw $s1, 6680($s5)
+        sw $s1, 6684($s5)
+        sw $s1, 6688($s5)
+        sw $s1, 7176($s5)
+        sw $s1, 7180($s5)
+        sw $s1, 7184($s5)
+        sw $s3, 7188($s5)
+        sw $s1, 7192($s5)
+        sw $s1, 7196($s5)
+        sw $s1, 7200($s5)
+        jr $31
+
+draw_dk_frente:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+        jal draw_dk_esquerda
+        jal draw_dk_rosto_frente
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $31
+
+
+draw_dk_andar_esq:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+        jal draw_dk_esquerda
+        jal draw_dk_rosto_esq
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $31
+
+
+draw_dk_dir_completo:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+        jal draw_dk_esquerda
+        jal draw_dk_rosto_dir
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $31
+
+
+draw_dk_rosto_frente:
+        # Rosto centralizado, olhando para o jogador.
+        sw $s0, 1028($s5)
+        sw $s0, 1032($s5)
+        sw $s1, 1036($s5)
+        sw $s1, 1040($s5)
+        sw $s1, 1044($s5)
+        sw $s1, 1048($s5)
+        sw $s1, 1052($s5)
+        sw $s0, 1056($s5)
+
+        sw $s0, 1540($s5)
+        sw $s1, 1544($s5)
+        sw $s3, 1548($s5)
+        sw $s1, 1552($s5)
+        sw $s1, 1556($s5)
+        sw $s3, 1560($s5)
+        sw $s1, 1564($s5)
+        sw $s0, 1568($s5)
+
+        sw $s0, 2052($s5)
+        sw $s1, 2056($s5)
+        sw $s1, 2060($s5)
+        sw $s1, 2064($s5)
+        sw $s1, 2068($s5)
+        sw $s1, 2072($s5)
+        sw $s1, 2076($s5)
+        sw $s1, 2080($s5)
+        sw $s0, 2084($s5)
+
+        sw $s0, 2564($s5)
+        sw $s1, 2568($s5)
+        sw $s1, 2572($s5)
+        sw $s3, 2576($s5)
+        sw $s3, 2580($s5)
+        sw $s3, 2584($s5)
+        sw $s3, 2588($s5)
+        sw $s1, 2592($s5)
+        sw $s0, 2596($s5)
+        jr $31
+
+
+draw_dk_rosto_esq:
+        # Rosto virado para a pilha de barris.
+        sw $s1, 1032($s5)
+        sw $s1, 1036($s5)
+        sw $s1, 1040($s5)
+        sw $s1, 1044($s5)
+        sw $s0, 1048($s5)
+        sw $s0, 1052($s5)
+        sw $s0, 1056($s5)
+        sw $s0, 1060($s5)
+
+        sw $s1, 1544($s5)
+        sw $s3, 1548($s5)
+        sw $s1, 1552($s5)
+        sw $s3, 1556($s5)
+        sw $s1, 1560($s5)
+        sw $s0, 1564($s5)
+        sw $s0, 1568($s5)
+        sw $s0, 1572($s5)
+
+        sw $s1, 2052($s5)
+        sw $s1, 2056($s5)
+        sw $s1, 2060($s5)
+        sw $s1, 2064($s5)
+        sw $s1, 2068($s5)
+        sw $s1, 2072($s5)
+        sw $s1, 2076($s5)
+        sw $s0, 2080($s5)
+        sw $s0, 2084($s5)
+        jr $31
+
+
+draw_dk_rosto_dir:
+        # Rosto virado para a direita, sem apagar corpo/barriga.
+        sw $s0, 1028($s5)
+        sw $s0, 1032($s5)
+        sw $s0, 1036($s5)
+        sw $s0, 1040($s5)
+        sw $s1, 1044($s5)
+        sw $s1, 1048($s5)
+        sw $s1, 1052($s5)
+        sw $s1, 1056($s5)
+
+        sw $s0, 1540($s5)
+        sw $s0, 1544($s5)
+        sw $s0, 1548($s5)
+        sw $s1, 1552($s5)
+        sw $s3, 1556($s5)
+        sw $s1, 1560($s5)
+        sw $s3, 1564($s5)
+        sw $s1, 1568($s5)
+
+        sw $s0, 2052($s5)
+        sw $s0, 2056($s5)
+        sw $s1, 2060($s5)
+        sw $s1, 2064($s5)
+        sw $s1, 2068($s5)
+        sw $s1, 2072($s5)
+        sw $s1, 2076($s5)
+        sw $s1, 2080($s5)
+        sw $s1, 2084($s5)
+        jr $31
+
+
+draw_dk_com_barril_dir:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+        jal draw_dk_dir_completo
+        jal clear_dk_braco_dir_baixo
+
+        # Braco e barril novos no peito/mao enquanto ele volta para a direita.
+        li $t0, 0x008b4513
+        li $t1, 0x00a0522d
+        li $t2, 0x00d2691e
+        sw $s1, 3608($s5)
+        sw $s1, 3612($s5)
+        sw $t0, 3616($s5)
+        sw $t0, 3620($s5)
+        sw $t0, 3624($s5)
+        sw $s1, 4120($s5)
+        sw $s1, 4124($s5)
+        sw $t1, 4128($s5)
+        sw $t2, 4132($s5)
+        sw $t1, 4136($s5)
+        sw $t0, 4640($s5)
+        sw $t0, 4644($s5)
+        sw $t0, 4648($s5)
+
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $31
+
+
+draw_dk_soltar_dir:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+        jal draw_dk_dir_completo
+        jal clear_dk_braco_dir_baixo
+
+        # Pose de soltar: braco para a direita, sem apagar a barriga.
+        sw $s1, 3608($s5)
+        sw $s1, 3612($s5)
+        sw $s0, 3616($s5)
+        sw $s0, 3620($s5)
+        sw $s0, 3624($s5)
+        sw $s1, 4120($s5)
+        sw $s1, 4124($s5)
+        sw $s0, 4128($s5)
+        sw $s0, 4132($s5)
+        sw $s0, 4136($s5)
+
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $31
+
+
+clear_dk_braco_esq_baixo:
+        # Remove o braco baixo esquerdo restaurando o cenario salvo no buffer.
+        la $t0, buffer_bg_dk
+        lw $t1, 836($t0)
+        sw $t1, 5120($s5)
+        lw $t1, 840($t0)
+        sw $t1, 5124($s5)
+        lw $t1, 844($t0)
+        sw $t1, 5128($s5)
+        lw $t1, 916($t0)
+        sw $t1, 5632($s5)
+        lw $t1, 920($t0)
+        sw $t1, 5636($s5)
+        lw $t1, 924($t0)
+        sw $t1, 5640($s5)
+        jr $31
+
+
+clear_dk_braco_dir_baixo:
+        # Remove o braco baixo direito restaurando o cenario salvo no buffer.
+        la $t0, buffer_bg_dk
+        lw $t1, 868($t0)
+        sw $t1, 5152($s5)
+        lw $t1, 872($t0)
+        sw $t1, 5156($s5)
+        lw $t1, 876($t0)
+        sw $t1, 5160($s5)
+        lw $t1, 948($t0)
+        sw $t1, 5664($s5)
+        lw $t1, 952($t0)
+        sw $t1, 5668($s5)
+        lw $t1, 956($t0)
+        sw $t1, 5672($s5)
+        jr $31
+
+
+redraw_pilha_barris:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+        li $a0, 4
+        li $a1, 20
+        jal draw_barril_cenario
+        li $a0, 4
+        li $a1, 17
+        jal draw_barril_cenario
+        li $a0, 4
+        li $a1, 14
+        jal draw_barril_cenario
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $31
+
+
+sleep_princesa:
+        addi $sp, $sp, -8
+        sw $ra, 0($sp)
+        sw $a0, 4($sp)
+sleep_princesa_loop:
+        lw $t0, 4($sp)
+        blez $t0, sleep_princesa_fim
+        jal anim_princesa_step
+        li $v0, 32
+        li $a0, 40
+        syscall
+        lw $t0, 4($sp)
+        addi $t0, $t0, -40
+        sw $t0, 4($sp)
+        bgtz $t0, sleep_princesa_loop
+sleep_princesa_fim:
+        lw $ra, 0($sp)
+        addi $sp, $sp, 8
+        jr $31
+
+
+anim_princesa_step:
+        addi $sp, $sp, -4
+        sw $ra, 0($sp)
+
+        jal clear_princesa_area
+
+        lw $t0, princesa_tick
+        addi $t0, $t0, 1
+        li $t1, 8
+        blt $t0, $t1, princesa_sem_mover
+
+        sw $zero, princesa_tick
+        lw $t2, princesa_x
+        lw $t3, princesa_dir
+        add $t2, $t2, $t3
+
+        li $t4, 25
+        blt $t2, $t4, princesa_bate_esq
+        li $t4, 83
+        bgt $t2, $t4, princesa_bate_dir
+        sw $t2, princesa_x
+        j princesa_troca_pose
+
+princesa_bate_esq:
+        li $t2, 25
+        sw $t2, princesa_x
+        li $t3, 1
+        sw $t3, princesa_dir
+        j princesa_troca_pose
+
+princesa_bate_dir:
+        li $t2, 83
+        sw $t2, princesa_x
+        li $t3, -1
+        sw $t3, princesa_dir
+
+princesa_troca_pose:
+        lw $t5, princesa_pose
+        xori $t5, $t5, 1
+        sw $t5, princesa_pose
+        j princesa_redesenha
+
+princesa_sem_mover:
+        sw $t0, princesa_tick
+
+princesa_redesenha:
+        jal save_princesa_area
+        jal draw_princesa
+
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $31
+
+
+save_princesa_area:
+        la $t0, buffer_bg_princesa
+        lui $t9, 0x1001
+        lw $t1, princesa_x
+        sll $t1, $t1, 2
+        add $t9, $t9, $t1
+        li $t8, 10
+save_princesa_y_loop:
+        move $t6, $t9
+        li $t7, 7
+save_princesa_x_loop:
+        lw $t1, 0($t6)
+        sw $t1, 0($t0)
+        addi $t0, $t0, 4
+        addi $t6, $t6, 4
+        addi $t7, $t7, -1
+        bgtz $t7, save_princesa_x_loop
+        addi $t9, $t9, 512
+        addi $t8, $t8, -1
+        bgtz $t8, save_princesa_y_loop
+        jr $31
+
+
+clear_princesa_area:
+        la $t0, buffer_bg_princesa
+        lui $t9, 0x1001
+        lw $t1, princesa_x
+        sll $t1, $t1, 2
+        add $t9, $t9, $t1
+        li $t8, 10
+clear_princesa_y_loop:
+        move $t6, $t9
+        li $t7, 7
+clear_princesa_x_loop:
+        lw $t1, 0($t0)
+        sw $t1, 0($t6)
+        addi $t0, $t0, 4
+        addi $t6, $t6, 4
+        addi $t7, $t7, -1
+        bgtz $t7, clear_princesa_x_loop
+        addi $t9, $t9, 512
+        addi $t8, $t8, -1
+        bgtz $t8, clear_princesa_y_loop
+        jr $31
+
+
+draw_princesa:
+        lui $a0, 0x1001
+        lw $t5, princesa_x
+        sll $t5, $t5, 2
+        add $a0, $a0, $t5
+
+        lw $t0, cor_p_rosa
+        lw $t1, cor_p_loiro
+        lw $t2, cor_p_pele
+        lw $t3, cor_p_preto
+        lw $t4, cor_p_vermelho
+
+        # Coroa
+        sw $t1, 8($a0)
+        sw $t1, 12($a0)
+        sw $t1, 16($a0)
+
+        # Cabelo e rosto
+        lw $t5, princesa_dir
+        bltz $t5, draw_princesa_rosto_esq
+
+        # Rosto olhando para a direita.
+        sw $t1, 516($a0)
+        sw $t1, 520($a0)
+        sw $t2, 524($a0)
+        sw $t2, 528($a0)
+        sw $t1, 1028($a0)
+        sw $t2, 1032($a0)
+        sw $t3, 1036($a0)
+        sw $t2, 1040($a0)
+        sw $t1, 1536($a0)
+        sw $t1, 1540($a0)
+        sw $t1, 1544($a0)
+        sw $t2, 1548($a0)
+        j draw_princesa_corpo
+
+draw_princesa_rosto_esq:
+        # Rosto olhando para a esquerda, espelhado na largura total de 7 pixels.
+        sw $t2, 520($a0)
+        sw $t2, 524($a0)
+        sw $t1, 528($a0)
+        sw $t1, 532($a0)
+        sw $t2, 1032($a0)
+        sw $t3, 1036($a0)
+        sw $t2, 1040($a0)
+        sw $t1, 1044($a0)
+        sw $t2, 1548($a0)
+        sw $t1, 1552($a0)
+        sw $t1, 1556($a0)
+        sw $t1, 1560($a0)
+
+draw_princesa_corpo:
+
+        # Vestido
+        sw $t0, 2056($a0)
+        sw $t0, 2060($a0)
+        sw $t0, 2064($a0)
+
+        sw $t0, 2568($a0)
+        sw $t0, 2572($a0)
+        sw $t0, 2576($a0)
+
+        sw $t0, 3076($a0)
+        sw $t0, 3080($a0)
+        sw $t0, 3084($a0)
+        sw $t0, 3088($a0)
+        sw $t0, 3092($a0)
+
+        sw $t0, 3584($a0)
+        sw $t0, 3588($a0)
+        sw $t0, 3592($a0)
+        sw $t0, 3596($a0)
+        sw $t0, 3600($a0)
+        sw $t0, 3604($a0)
+        sw $t0, 3608($a0)
+
+        sw $t0, 4096($a0)
+        sw $t0, 4100($a0)
+        sw $t0, 4104($a0)
+        sw $t0, 4108($a0)
+        sw $t0, 4112($a0)
+        sw $t0, 4116($a0)
+        sw $t0, 4120($a0)
+
+        lw $t5, princesa_pose
+        beqz $t5, draw_princesa_pose_a
+
+        # Pose B: bracos alternados para dar sensacao de medo/desespero.
+        sw $t2, 2048($a0)
+        sw $t2, 2580($a0)
+        sw $t4, 4612($a0)
+        sw $t4, 4624($a0)
+        jr $31
+
+draw_princesa_pose_a:
+        # Pose A: bracos levantados do outro lado e passinho diferente.
+        sw $t2, 2564($a0)
+        sw $t2, 2072($a0)
+        sw $t4, 4616($a0)
+        sw $t4, 4628($a0)
+        jr $31
+
+
+save_dk_area:
+        la $t0, buffer_bg_dk
+        addi $t9, $s5, -36      # inicio: 9 pixels antes do ponto base do DK
+        li $t8, 15              # altura do sprite
+save_dk_y_loop:
+        move $t6, $t9
+        li $t7, 20              # largura do sprite
+save_dk_x_loop:
+        lw $t1, 0($t6)
+        sw $t1, 0($t0)
+        addi $t0, $t0, 4
+        addi $t6, $t6, 4
+        addi $t7, $t7, -1
+        bgtz $t7, save_dk_x_loop
+        addi $t9, $t9, 512
+        addi $t8, $t8, -1
+        bgtz $t8, save_dk_y_loop
+        jr $31
+
+
+clear_dk_area:
+        la $t0, buffer_bg_dk
+        addi $t9, $s5, -36      # restaura exatamente o cenario salvo atras do DK
+        li $t8, 15
+restore_dk_y_loop:
+        move $t6, $t9
+        li $t7, 20
+restore_dk_x_loop:
+        lw $t1, 0($t0)
+        sw $t1, 0($t6)
+        addi $t0, $t0, 4
+        addi $t6, $t6, 4
+        addi $t7, $t7, -1
+        bgtz $t7, restore_dk_x_loop
+        addi $t9, $t9, 512
+        addi $t8, $t8, -1
+        bgtz $t8, restore_dk_y_loop
+        jr $31
+
+save_bg:
+        move $t5, $a1
+        move $t8, $a3
+        move $t1, $t4            
+save_y_loop:
+        move $t6, $a0
+        move $t7, $a2
+save_x_loop:
+        lui $t9, 0x1001
+        sll $t0, $t5, 9
+        add $t9, $t9, $t0
+        sll $t0, $t6, 2
+        add $t9, $t9, $t0
+        lw $t2, 0($t9)           
+        sw $t2, 0($t1)           
+        addi $t1, $t1, 4         
+        addi $t6, $t6, 1
+        addi $t7, $t7, -1
+        bgtz $t7, save_x_loop
+        addi $t5, $t5, 1
+        addi $t8, $t8, -1
+        bgtz $t8, save_y_loop
+        jr $31
+
+restore_bg:
+        move $t5, $a1
+        move $t8, $a3
+        move $t1, $t4            
+restore_y_loop:
+        move $t6, $a0
+        move $t7, $a2
+restore_x_loop:
+        lui $t9, 0x1001
+        sll $t0, $t5, 9
+        add $t9, $t9, $t0
+        sll $t0, $t6, 2
+        add $t9, $t9, $t0
+        lw $t2, 0($t1)           
+        sw $t2, 0($t9)           
+        addi $t1, $t1, 4         
+        addi $t6, $t6, 1
+        addi $t7, $t7, -1
+        bgtz $t7, restore_x_loop
+        addi $t5, $t5, 1
+        addi $t8, $t8, -1
+        bgtz $t8, restore_y_loop
+        jr $31
